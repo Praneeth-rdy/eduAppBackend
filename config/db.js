@@ -1,27 +1,25 @@
-const path = require('path');
 const { open } = require('sqlite');
 const sqlite3 = require('sqlite3');
+const { createUserTable } = require('../models/User');
 
 
-const dbPath = path.join(__dirname, "../goodreads.db");
-let db = null;
-
-const initDb = async () => {
+const initDb = async (dbPath) => {
     try {
-        db = await open({
+        const db = await open({
             filename: dbPath,
             driver: sqlite3.Database
         });
-        console.log("Database Initialised")
+        console.log("Database Initialised");
+        return db;
     } catch (e) {
         console.log(`DB Error: ${e.message}`);
         process.exit(1);
     }
 }
 
-const accessDb = (request, response, next) => {
+module.exports.accessDb = (db, request, response, next) => {
     if (db == null) {
-        initDb();
+        db = initDb();
     }
     request.getDb = () => db;
     console.log('Database access given');
@@ -29,5 +27,8 @@ const accessDb = (request, response, next) => {
 
 };
 
+module.exports.createTablesIfNotExist = (db) => {
+    createUserTable(db);
+}
+
 module.exports.initDb = initDb;
-module.exports.accessDb = accessDb;
